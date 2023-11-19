@@ -1,15 +1,27 @@
 import React from 'react';
 
+type Property = {
+  title: string;
+  floor: number;
+  rent: string;
+  areaCode: number;
+  street: string;
+  numberOfRooms: number;
+  numberOfBaths: number;
+  cover: { id: string; link: string };
+  images: { id: string; link: string }[];
+};
+
 type Props = {
-  property: { img: string };
+  property: Property;
 };
 
 const PropertyCard: React.FC<Props> = ({ property }) => {
   return (
-    <div className="p-5 antialiased text-gray-900">
+    <div className="m-5 antialiased text-gray-900">
       <div>
         <img
-          src={property.img}
+          src={property.cover.link}
           alt=" random imgee"
           className="w-[350px] object-cover object-center rounded-lg shadow-md"
         />
@@ -21,19 +33,19 @@ const PropertyCard: React.FC<Props> = ({ property }) => {
                 New
               </span>
               <div className="ml-2 text-gray-600 uppercase text-xs font-semibold tracking-wider">
-                2 baths &bull; 3 rooms
+                {property.numberOfBaths} baths &bull; {property.numberOfRooms} rooms
               </div>
             </div>
 
-            <h4 className="mt-1 text-xl font-semibold uppercase leading-tight truncate">A random Title</h4>
+            <h4 className="mt-1 text-sm font-semibold uppercase leading-tight truncate w-64">{property.title}</h4>
 
             <div className="mt-1">
-              $1800
-              <span className="text-gray-600 text-sm"> /wk</span>
+              {property.rent}
+              <span className="text-gray-600 text-sm"> /mo</span>
             </div>
             <div className="mt-4">
-              <span className="text-teal-600 text-md font-semibold">4/5 ratings </span>
-              <span className="text-sm text-gray-600">(based on 234 ratings)</span>
+              <span className="text-teal-600 text-md font-semibold">{property.areaCode} </span>
+              <span className="text-sm text-gray-600">({property.street})</span>
             </div>
           </div>
         </div>

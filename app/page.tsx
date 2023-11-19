@@ -1,11 +1,5 @@
-import Navbar from './components/Navbar';
-import Properties from './components/Properties';
+import { redirect } from 'next/navigation';
 
 export default function Home() {
-  return (
-    <main>
-      <Navbar />
-      <Properties />
-    </main>
-  );
+  return redirect('/dashboard');
 }
