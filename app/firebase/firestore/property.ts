@@ -1,5 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
-import { getFirestore, doc, setDoc, getDoc, getDocs, collection } from 'firebase/firestore';
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  getDocs,
+  collection,
+} from 'firebase/firestore';
 
 import config from '../config';
 
@@ -7,6 +14,7 @@ const DB = getFirestore(config);
 const COLLECTION = 'properties';
 
 export type Property = {
+  id: string;
   title: string;
   rent: string;
   areaCode: string;
@@ -29,7 +37,7 @@ const get = async (id: string) => {
     error = e;
   }
 
-  return { result, error };
+  return result?.data() as unknown as Property;
 };
 
 const list = async () => {
@@ -38,8 +46,11 @@ const list = async () => {
 
   try {
     const all = await getDocs(collection(DB, COLLECTION));
-    all.forEach(r => {
-      result.push(r.data() as unknown as Property);
+    all.forEach((r) => {
+      result.push({
+        id: r.id,
+        ...(r.data() as unknown as Omit<Property, 'id'>),
+      });
     });
   } catch (e) {
     error = e;
@@ -48,12 +59,27 @@ const list = async () => {
   return result;
 };
 
-const create = async (property: Property) => {
+const create = async (property: Omit<Property, 'id'>) => {
+  const id = uuidv4();
   let result = null;
   let error = null;
 
   try {
-    const id = uuidv4();
+    result = await setDoc(doc(DB, COLLECTION, id), property, {
+      merge: true,
+    });
+  } catch (e) {
+    error = e;
+  }
+
+  return { result: { ...property, id }, error };
+};
+
+const update = async (id: string, property: Omit<Property, 'id'>) => {
+  let result = null;
+  let error = null;
+
+  try {
     result = await setDoc(doc(DB, COLLECTION, id), property, {
       merge: true,
     });
@@ -64,4 +90,4 @@ const create = async (property: Property) => {
   return { result, error };
 };
 
-export default { create, get, list };
+export default { create, update, get, list };

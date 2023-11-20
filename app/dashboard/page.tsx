@@ -2,13 +2,14 @@
 import React, { useEffect, useState } from 'react';
 
 import Photos from './components/Photos';
-import DropDown from './components/DropDown';
+import AddToProperty from './components/AddToProperty';
 import Properties from './components/Properties';
-import AddProperty from './components/AddProperty';
-import UploadPhotos from './components/UploadPhotos';
+import AddPropertyBtn from './components/AddPropertyBtn';
+import UploadPhotosBtn from './components/UploadPhotosBtn';
 
 import property, { Property } from '../firebase/firestore/property';
 import photo, { Photo } from '../firebase/firestore/photo';
+import { sortAlphabetically } from '../utils';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('properties');
@@ -21,50 +22,73 @@ const Dashboard = () => {
     setSelectedPhotos(selected);
   };
 
-  const handleAddToProperty = (title: string) => {
-    const index = properties.findIndex(p => p.title === title);
-    const imgList = photos.filter(img => selectedPhotos.includes(img.ref));
-    properties[index].images.push(...imgList);
+  const handlePropertyAdded = (p: Property) => {
+    setProperties([p, ...properties]);
+    setPhotos([...p.images, ...photos]);
+  };
+
+  const handlePhotosUploaded = (ps: Photo[]) => {
+    setPhotos([...ps, ...photos]);
+  };
+
+  const handleAddToProperty = async (propertyId: string) => {
+    const clonedPhotos = [...photos];
+    const clonedProperties = [...properties];
+
+    const { id: sid, ...found } = properties.find((p) => p.id === propertyId)!;
+    const newImages = photos.filter((img) => selectedPhotos.includes(img.ref));
+    const images = [...found.images, ...newImages];
+    await property.update(propertyId, { ...found, images, cover: images[0] });
+
+    const mappedProperties = clonedProperties.map((cp) =>
+      cp.id === propertyId ? { ...cp, images, cover: images[0] } : cp
+    );
+
+    const mappedPhotos = clonedPhotos.map((cp) =>
+      selectedPhotos.includes(cp.ref)
+        ? { ...cp, assignedProperty: found.title }
+        : cp
+    );
+
     setSelectedPhotos([]);
+    setPhotos(mappedPhotos);
+    setProperties(mappedProperties);
+  };
+
+  const fetchState = async () => {
+    const propertyList = await property.list();
+    const photoList = await photo.list();
+
+    setPhotos(photoList);
+    setProperties(propertyList);
   };
 
   useEffect(() => {
-    const fetchState = async () => {
-      const propertyList = await property.list();
-      const photoList = await photo.list();
-
-      setPhotos(photoList);
-      setProperties(propertyList);
-    };
-
     fetchState();
   }, []);
 
   useEffect(() => {
     if (photos.length) {
-      const mappedPhotos = photos.map(item => ({
+      const mappedPhotos = photos.map((item) => ({
         ...item,
-        assignedProperty: properties.find(p => p.images.some(i => i.ref === item.ref))?.title,
+        assignedProperty:
+          properties.find((p) => p.images.some((i) => i.ref === item.ref))
+            ?.title || '',
       }));
-      setPhotos(mappedPhotos);
+
+      setPhotos(sortAlphabetically(mappedPhotos, 'assignedProperty'));
     }
   }, [photos.length]);
 
   return (
-    <div className="flex flex-col pt-24">
-      <div className="flex justify-between w-9/12 self-center align-middle">
-        <div className="align-middle">
+    <div className='flex-1 flex flex-col pt-24'>
+      <div className='flex justify-between w-9/12 self-center align-middle flex-col md:flex-row'>
+        <div className='align-middle mb-6 md:mb-0'>
           <span
             className={`cursor-pointer text-base border-b-2 pb-1 pr-5 mr-5  hover:text-cyan-500 hover:border-cyan-500 font-light ${
-              activeTab === 'photos' ? 'border-cyan-500 text-cyan-600' : 'border-gray-200 text-gray-400'
-            }`}
-            onClick={() => setActiveTab('photos')}
-          >
-            All Photos
-          </span>
-          <span
-            className={`cursor-pointer text-base border-b-2 pb-1 pr-5 mr-5  hover:text-cyan-500 hover:border-cyan-500 font-light ${
-              activeTab === 'properties' ? 'border-cyan-500 text-cyan-600' : 'border-gray-200 text-gray-400'
+              activeTab === 'properties'
+                ? 'border-cyan-500 text-cyan-600'
+                : 'border-gray-200 text-gray-400'
             }`}
             onClick={() => {
               setActiveTab('properties');
@@ -73,28 +97,46 @@ const Dashboard = () => {
           >
             Properties
           </span>
+
+          <span
+            className={`cursor-pointer text-base border-b-2 pb-1 pr-5 mr-5  hover:text-cyan-500 hover:border-cyan-500 font-light ${
+              activeTab === 'photos'
+                ? 'border-cyan-500 text-cyan-600'
+                : 'border-gray-200 text-gray-400'
+            }`}
+            onClick={() => setActiveTab('photos')}
+          >
+            All Photos
+          </span>
         </div>
 
-        <div className="w-2/3 flex justify-end">
+        <div className='flex flex-1 justify-end flex-col md:flex-row'>
           {activeTab === 'photos' && !!selectedPhotos.length && (
-            <div className="">
-              <DropDown properties={properties} count={selectedPhotos.length} onSelect={handleAddToProperty} />
-              {/* <button
-                type="button"
-                className="bg-[#eab308] ml-2 text-white hover:bg-[#fbbf24] font-light rounded-lg text-sm py-2 w-44 text-center shadow-lg"
-              >
-                + Add to property ({selectedPhotos.length})
-              </button> */}
+            <div className='mb-3 md:mb-0 flex justify-center'>
+              <AddToProperty
+                properties={properties}
+                count={selectedPhotos.length}
+                onSelect={handleAddToProperty}
+              />
             </div>
           )}
 
-          {activeTab === 'properties' ? <AddProperty /> : <UploadPhotos />}
+          {activeTab === 'properties' ? (
+            <AddPropertyBtn onPropertyAdded={handlePropertyAdded} />
+          ) : (
+            <UploadPhotosBtn onPhotosUploaded={handlePhotosUploaded} />
+          )}
         </div>
       </div>
+
       {activeTab === 'properties' ? (
         <Properties properties={properties} />
       ) : (
-        <Photos photos={photos} selected={selectedPhotos} onSelect={handleSelect} />
+        <Photos
+          photos={photos}
+          selected={selectedPhotos}
+          onSelect={handleSelect}
+        />
       )}
     </div>
   );
