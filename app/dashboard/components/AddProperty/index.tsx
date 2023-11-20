@@ -1,24 +1,63 @@
 import React, { useCallback, useState } from 'react';
 import { Field, Form, Formik } from 'formik';
 import { useDropzone } from 'react-dropzone';
+import { getDownloadURL, getStorage, ref, uploadBytesResumable } from 'firebase/storage';
 
-import { Property, properties } from '@/app/data';
+import { Property } from '@/app/data';
 import property from '@/app/firebase/firestore/property';
 
 const AddProperty = () => {
   const [showModal, setShowModal] = useState(false);
   const [uploaded, setUploaded] = useState(false);
+  const [images, setImages] = useState<{ ref: string; link: string }[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const onDrop = useCallback((acceptedFiles: any[]) => {
-    setUploaded(true);
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const list: { ref: string; link: string }[] = [];
+    for (const file of acceptedFiles) {
+      setIsUploading(true);
+      const storage = getStorage();
+      const storageRef = ref(storage, `images/${file.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      uploadTask.on(
+        'state_changed',
+        snapshot => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log('Upload is ' + progress + '% done');
+          switch (snapshot.state) {
+            case 'paused':
+              console.log('Upload is paused');
+              break;
+            case 'running':
+              console.log('Upload is running');
+              break;
+          }
+        },
+        error => {
+          console.error(error);
+          setIsUploading(false);
+        },
+        () => {
+          getDownloadURL(uploadTask.snapshot.ref).then(downloadURL => {
+            console.log('File available at', downloadURL);
+            list.push({ ref: storageRef.fullPath, link: downloadURL });
+
+            if (list.length === acceptedFiles.length) {
+              setIsUploading(false);
+              setUploaded(true);
+              setImages([...list]);
+            }
+          });
+        }
+      );
+    }
   }, []);
 
   const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
-  const handleSubmit = async (values: Omit<Property, 'cover'>) => {
-    console.log(values.images);
-    const newProperty = { ...values, cover: { id: '', link: '' }, images: [] };
-    properties.push(newProperty);
+  const handleSubmit = async (values: Omit<Property, 'cover' | 'images'>) => {
+    const newProperty = { ...values, cover: images[0] ? { ...images[0] } : { ref: '', link: '' }, images };
 
     const { result, error } = await property.create(newProperty);
 
@@ -67,115 +106,112 @@ const AddProperty = () => {
                       areaCode: '',
                       numberOfRooms: '',
                       numberOfBaths: '',
-                      images: [],
                     }}
                     onSubmit={values => handleSubmit(values)}
                   >
-                    {({ setFieldValue }) => (
-                      <Form className="flex">
-                        <div className="flex-1 p-5 pt-0">
-                          <div className="grid grid-cols-1 space-y-2">
-                            <label className="text-sm font-base text-gray-500 tracking-wide">
-                              Upload property photos
-                            </label>
-                            <div className="flex items-center justify-center w-full" {...getRootProps()}>
-                              <label className="flex flex-col rounded-lg border-4 border-dashed w-full h-60 p-10 group text-center">
-                                <div className="h-full w-full text-center flex flex-col justify-center items-center">
-                                  {uploaded ? (
+                    <Form className="flex">
+                      <div className="flex-1 p-5 pt-0">
+                        <div className="grid grid-cols-1 space-y-2">
+                          <label className="text-sm font-base text-gray-500 tracking-wide">
+                            Upload property photos
+                          </label>
+                          <div className="flex items-center justify-center w-full" {...getRootProps()}>
+                            <label className="flex flex-col rounded-lg border-4 border-dashed w-full h-60 p-10 group text-center">
+                              <div className="h-full w-full text-center flex flex-col justify-center items-center">
+                                {uploaded ? (
+                                  <div className="flex flex-auto mx-auto -mt-10">
+                                    <img
+                                      className="has-mask object-center h-48 w-48 mt-8"
+                                      src="/buildings/ok.jpg"
+                                      alt="freepik image"
+                                    />
+                                  </div>
+                                ) : (
+                                  <>
                                     <div className="flex flex-auto mx-auto -mt-10">
                                       <img
-                                        className="has-mask object-center h-48 w-48 mt-8"
-                                        src="/buildings/ok.jpg"
+                                        className="has-mask object-center h-36 w-32 mt-8"
+                                        src="/buildings/upload.jpg"
                                         alt="freepik image"
                                       />
                                     </div>
-                                  ) : (
-                                    <>
-                                      <div className="flex flex-auto mx-auto -mt-10">
-                                        <img
-                                          className="has-mask object-center h-36 w-32 mt-8"
-                                          src="/buildings/upload.jpg"
-                                          alt="freepik image"
-                                        />
-                                      </div>
-                                      <p className="pointer-none text-gray-500 font-light text-sm mt-2">
-                                        <span className="text-sm">Drag and drop</span> images here <br /> or{' '}
-                                        <label className="text-cyan-600 hover:underline cursor-pointer">
-                                          select from your device
-                                        </label>
-                                        <input type="file" accept="image/*" className="hidden" {...getInputProps()} />
-                                      </p>
-                                    </>
-                                  )}
-                                </div>
-                              </label>
-                            </div>
-                          </div>
-                          <p className="text-sm text-gray-300">
-                            <span>Image type: jpeg, png, jpg</span>
-                          </p>
-                        </div>
-                        <div className="flex-1">
-                          <Field
-                            id="title"
-                            name="title"
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm mb-4"
-                            placeholder="Property title"
-                          />
-
-                          <Field
-                            id="rent"
-                            name="rent"
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm mb-4"
-                            placeholder="Rent $"
-                          />
-
-                          <Field
-                            id="street"
-                            name="street"
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm mb-4"
-                            placeholder="Street"
-                          />
-                          <Field
-                            id="areaCode"
-                            name="areaCode"
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm mb-4"
-                            placeholder="Postcode"
-                          />
-
-                          <section className="flex mb-6">
-                            <Field
-                              id="numberOfRooms"
-                              name="numberOfRooms"
-                              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm mr-2"
-                              placeholder="Num of rooms"
-                            />
-
-                            <Field
-                              id="numberOfBaths"
-                              name="numberOfBaths"
-                              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm"
-                              placeholder="Num of baths"
-                            />
-                          </section>
-                          <div className="flex justify-end">
-                            <button
-                              className="text-gray-500 background-transparent font-base uppercase px-6 py-2 text-sm outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-                              type="button"
-                              onClick={() => setShowModal(false)}
-                            >
-                              close
-                            </button>
-                            <button
-                              type="submit"
-                              className="bg-cyan-600 ml-6 text-white hover:bg-cyan-500 font-light rounded-lg text-sm px-20 py-2 w-34 text-center shadow-lg ease-linear transition-all duration-150"
-                            >
-                              Create
-                            </button>
+                                    <p className="pointer-none text-gray-500 font-light text-sm mt-2">
+                                      <span className="text-sm">Drag and drop</span> images here <br /> or{' '}
+                                      <label className="text-cyan-600 hover:underline cursor-pointer">
+                                        select from your device
+                                      </label>
+                                      <input type="file" accept="image/*" className="hidden" {...getInputProps()} />
+                                    </p>
+                                  </>
+                                )}
+                              </div>
+                            </label>
                           </div>
                         </div>
-                      </Form>
-                    )}
+                        <p className="text-sm text-gray-300">
+                          <span>Image type: jpeg, png, jpg</span>
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <Field
+                          id="title"
+                          name="title"
+                          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm mb-4"
+                          placeholder="Property title"
+                        />
+
+                        <Field
+                          id="rent"
+                          name="rent"
+                          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm mb-4"
+                          placeholder="Rent $"
+                        />
+
+                        <Field
+                          id="street"
+                          name="street"
+                          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm mb-4"
+                          placeholder="Street"
+                        />
+                        <Field
+                          id="areaCode"
+                          name="areaCode"
+                          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm mb-4"
+                          placeholder="Postcode"
+                        />
+
+                        <section className="flex mb-6">
+                          <Field
+                            id="numberOfRooms"
+                            name="numberOfRooms"
+                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm mr-2"
+                            placeholder="Num of rooms"
+                          />
+
+                          <Field
+                            id="numberOfBaths"
+                            name="numberOfBaths"
+                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm"
+                            placeholder="Num of baths"
+                          />
+                        </section>
+                        <div className="flex justify-end">
+                          <button
+                            className="text-gray-500 background-transparent font-base uppercase px-6 py-2 text-sm outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
+                            type="button"
+                            onClick={() => setShowModal(false)}
+                          >
+                            close
+                          </button>
+                          <button
+                            type="submit"
+                            className="bg-cyan-600 ml-6 text-white hover:bg-cyan-500 font-light rounded-lg text-sm px-20 py-2 w-34 text-center shadow-lg ease-linear transition-all duration-150"
+                          >
+                            Create
+                          </button>
+                        </div>
+                      </div>
+                    </Form>
                   </Formik>
                 </div>
               </div>

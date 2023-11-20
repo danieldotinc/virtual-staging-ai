@@ -13,8 +13,8 @@ export type Property = {
   street: string;
   numberOfRooms: string;
   numberOfBaths: string;
-  cover: { id: string; link: string };
-  images: { id: string; link: string }[];
+  cover: { ref: string; link: string };
+  images: { ref: string; link: string }[];
 };
 
 const get = async (id: string) => {
