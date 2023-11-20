@@ -1,7 +1,24 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
+import { Field, Form, Formik } from 'formik';
+import { useDropzone } from 'react-dropzone';
+
+import { Property, properties } from '@/app/data';
 
 const AddProperty = () => {
   const [showModal, setShowModal] = useState(false);
+  const [uploaded, setUploaded] = useState(false);
+
+  const onDrop = useCallback((acceptedFiles: any[]) => {
+    setUploaded(true);
+  }, []);
+
+  const { getRootProps, getInputProps } = useDropzone({ onDrop });
+
+  const handleSubmit = (values: Omit<Property, 'cover'>) => {
+    console.log(values.images);
+    properties.push({ ...values, cover: { id: '', link: '' }, images: [] });
+    setShowModal(false);
+  };
 
   return (
     <>
@@ -19,41 +36,148 @@ const AddProperty = () => {
               {/*content*/}
               <div className="border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none">
                 {/*header*/}
-                <div className="flex items-start justify-between p-5 border-b border-solid border-blueGray-200 rounded-t">
-                  <h3 className="text-3xl font-semibold">Modal Title</h3>
+                <div className="flex items-start justify-between p-4 rounded-t">
+                  <h3 className="self-center text-xl whitespace-nowrap dark:text-white font-light tracking-widest">
+                    New Property
+                  </h3>
                   <button
-                    className="p-1 ml-auto bg-transparent border-0 text-black opacity-5 float-right text-3xl leading-none font-semibold outline-none focus:outline-none"
+                    className="p-1 ml-auto bg-transparent border-0 float-right text-3xl leading-none font-base outline-none focus:outline-none"
                     onClick={() => setShowModal(false)}
                   >
-                    <span className="bg-transparent text-black opacity-5 h-6 w-6 text-2xl block outline-none focus:outline-none">
+                    <span className="flex justify-end align-top items-end bg-transparent text-gray-500  h-6 w-6 text-2xl outline-none focus:outline-none hover:text-gray-400">
                       ×
                     </span>
                   </button>
                 </div>
                 {/*body*/}
-                <div className="relative p-6 flex-auto">
-                  <p className="my-4 text-blueGray-500 text-lg leading-relaxed">
-                    I always felt like I could do anything. That’s the main thing people are controlled by! Thoughts-
-                    their perception of themselves! They're slowed down by their perception of themselves. If you're
-                    taught you can’t do anything, you won’t do anything. I was taught I could do everything.
-                  </p>
-                </div>
-                {/*footer*/}
-                <div className="flex items-center justify-end p-6 border-t border-solid border-blueGray-200 rounded-b">
-                  <button
-                    className="text-red-500 background-transparent font-bold uppercase px-6 py-2 text-sm outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-                    type="button"
-                    onClick={() => setShowModal(false)}
+                <div className="relative p-6 pt-4 flex-auto">
+                  <Formik
+                    initialValues={{
+                      title: '',
+                      rent: '',
+                      street: '',
+                      areaCode: '',
+                      numberOfRooms: '',
+                      numberOfBaths: '',
+                      images: [],
+                    }}
+                    onSubmit={values => handleSubmit(values)}
                   >
-                    Close
-                  </button>
-                  <button
-                    className="bg-emerald-500 text-white active:bg-emerald-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                  >
-                    Save Changes
-                  </button>
+                    {({ setFieldValue }) => (
+                      <Form className="flex">
+                        <div className="flex-1 p-5 pt-0">
+                          <div className="grid grid-cols-1 space-y-2">
+                            <label className="text-sm font-base text-gray-500 tracking-wide">
+                              Upload property photos
+                            </label>
+                            <div className="flex items-center justify-center w-full" {...getRootProps()}>
+                              <label className="flex flex-col rounded-lg border-4 border-dashed w-full h-60 p-10 group text-center">
+                                <div className="h-full w-full text-center flex flex-col justify-center items-center">
+                                  {uploaded ? (
+                                    <div className="flex flex-auto mx-auto -mt-10">
+                                      <img
+                                        className="has-mask object-center h-48 w-48 mt-8"
+                                        src="/buildings/ok.jpg"
+                                        alt="freepik image"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <div className="flex flex-auto mx-auto -mt-10">
+                                        <img
+                                          className="has-mask object-center h-36 w-32 mt-8"
+                                          src="/buildings/upload.jpg"
+                                          alt="freepik image"
+                                        />
+                                      </div>
+                                      <p className="pointer-none text-gray-500 font-light text-sm mt-2">
+                                        <span className="text-sm">Drag and drop</span> images here <br /> or{' '}
+                                        <label
+                                          htmlFor="file_input"
+                                          className="text-cyan-600 hover:underline cursor-pointer"
+                                        >
+                                          select from your device
+                                        </label>
+                                        <input
+                                          type="file"
+                                          id="file_input"
+                                          accept="image/*"
+                                          className="hidden"
+                                          {...getInputProps()}
+                                        />
+                                      </p>
+                                    </>
+                                  )}
+                                </div>
+                              </label>
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-300">
+                            <span>Image type: jpeg, png, jpg</span>
+                          </p>
+                        </div>
+                        <div className="flex-1">
+                          <Field
+                            id="title"
+                            name="title"
+                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm mb-4"
+                            placeholder="Property title"
+                          />
+
+                          <Field
+                            id="rent"
+                            name="rent"
+                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm mb-4"
+                            placeholder="Rent $"
+                          />
+
+                          <Field
+                            id="street"
+                            name="street"
+                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm mb-4"
+                            placeholder="Street"
+                          />
+                          <Field
+                            id="areaCode"
+                            name="areaCode"
+                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm mb-4"
+                            placeholder="Postcode"
+                          />
+
+                          <section className="flex mb-6">
+                            <Field
+                              id="numberOfRooms"
+                              name="numberOfRooms"
+                              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm mr-2"
+                              placeholder="Num of rooms"
+                            />
+
+                            <Field
+                              id="numberOfBaths"
+                              name="numberOfBaths"
+                              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm"
+                              placeholder="Num of baths"
+                            />
+                          </section>
+                          <div className="flex justify-end">
+                            <button
+                              className="text-gray-500 background-transparent font-base uppercase px-6 py-2 text-sm outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
+                              type="button"
+                              onClick={() => setShowModal(false)}
+                            >
+                              close
+                            </button>
+                            <button
+                              type="submit"
+                              className="bg-cyan-600 ml-6 text-white hover:bg-cyan-500 font-light rounded-lg text-sm px-20 py-2 w-34 text-center shadow-lg ease-linear transition-all duration-150"
+                            >
+                              Create
+                            </button>
+                          </div>
+                        </div>
+                      </Form>
+                    )}
+                  </Formik>
                 </div>
               </div>
             </div>

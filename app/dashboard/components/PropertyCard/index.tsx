@@ -1,16 +1,5 @@
 import React from 'react';
-
-type Property = {
-  title: string;
-  floor: number;
-  rent: string;
-  areaCode: number;
-  street: string;
-  numberOfRooms: number;
-  numberOfBaths: number;
-  cover: { id: string; link: string };
-  images: { id: string; link: string }[];
-};
+import { Property } from '@/app/data';
 
 type Props = {
   property: Property;
