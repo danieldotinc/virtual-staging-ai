@@ -1,13 +1,14 @@
 import React from 'react';
 import { Dropdown } from 'flowbite-react';
-import { properties } from '@/app/data';
+import { Property } from '@/app/firebase/firestore/property';
 
 type Props = {
   count: number;
+  properties: Property[];
   onSelect: (title: string) => void;
 };
 
-const DropDown: React.FC<Props> = ({ count, onSelect }) => {
+const DropDown: React.FC<Props> = ({ properties, count, onSelect }) => {
   return (
     <Dropdown
       label={`+ Add to property (${count})`}

@@ -3,8 +3,7 @@ import { Field, Form, Formik } from 'formik';
 import { useDropzone } from 'react-dropzone';
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from 'firebase/storage';
 
-import { Property } from '@/app/data';
-import property from '@/app/firebase/firestore/property';
+import property, { Property } from '@/app/firebase/firestore/property';
 
 const AddProperty = () => {
   const [showModal, setShowModal] = useState(false);

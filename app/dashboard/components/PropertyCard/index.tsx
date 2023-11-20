@@ -1,5 +1,5 @@
 import React from 'react';
-import { Property } from '@/app/data';
+import { Property } from '@/app/firebase/firestore/property';
 
 type Props = {
   property: Property;
@@ -7,17 +7,15 @@ type Props = {
 
 const PropertyCard: React.FC<Props> = ({ property }) => {
   return (
-    <div className="m-5 antialiased text-gray-900">
+    <div className="m-6 antialiased text-gray-900">
       <div>
-        {!!property.cover.link && (
-          <img
-            src={property.cover.link}
-            alt=" random imgee"
-            className="w-[350px] object-cover object-center rounded-lg shadow-md"
-          />
-        )}
+        <img
+          src={property.cover.link || '/buildings/default.jpg'}
+          alt=" random imgee"
+          className="w-[350px] object-cover object-center rounded-lg shadow-md"
+        />
 
-        <div className={`px-4 ${property.cover.link ? 'relative -mt-16' : ''}`}>
+        <div className="px-4 relative -mt-16">
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <div className="flex items-baseline">
               <span className="bg-teal-200 text-teal-800 text-xs px-2 inline-block rounded-full  uppercase font-semibold tracking-wide">

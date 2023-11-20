@@ -1,18 +1,21 @@
 'use client';
-import React, { useState } from 'react';
-import Link from 'next/link';
+import React, { useEffect, useState } from 'react';
 
 import Photos from './components/Photos';
-import Properties from './components/Properties';
 import DropDown from './components/DropDown';
-
-import { images, properties } from '@/app/data';
+import Properties from './components/Properties';
 import AddProperty from './components/AddProperty';
 import UploadPhotos from './components/UploadPhotos';
+
+import property, { Property } from '../firebase/firestore/property';
+import photo, { Photo } from '../firebase/firestore/photo';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('properties');
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
+
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [photos, setPhotos] = useState<Photo[]>([]);
 
   const handleSelect = (selected: string[]) => {
     setSelectedPhotos(selected);
@@ -20,10 +23,32 @@ const Dashboard = () => {
 
   const handleAddToProperty = (title: string) => {
     const index = properties.findIndex(p => p.title === title);
-    const imgList = images.filter(img => selectedPhotos.includes(img.id));
+    const imgList = photos.filter(img => selectedPhotos.includes(img.ref));
     properties[index].images.push(...imgList);
     setSelectedPhotos([]);
   };
+
+  useEffect(() => {
+    const fetchState = async () => {
+      const propertyList = await property.list();
+      const photoList = await photo.list();
+
+      setPhotos(photoList);
+      setProperties(propertyList);
+    };
+
+    fetchState();
+  }, []);
+
+  useEffect(() => {
+    if (photos.length) {
+      const mappedPhotos = photos.map(item => ({
+        ...item,
+        assignedProperty: properties.find(p => p.images.some(i => i.ref === item.ref))?.title,
+      }));
+      setPhotos(mappedPhotos);
+    }
+  }, [photos.length]);
 
   return (
     <div className="flex flex-col pt-24">
@@ -53,7 +78,7 @@ const Dashboard = () => {
         <div className="w-2/3 flex justify-end">
           {activeTab === 'photos' && !!selectedPhotos.length && (
             <div className="">
-              <DropDown count={selectedPhotos.length} onSelect={handleAddToProperty} />
+              <DropDown properties={properties} count={selectedPhotos.length} onSelect={handleAddToProperty} />
               {/* <button
                 type="button"
                 className="bg-[#eab308] ml-2 text-white hover:bg-[#fbbf24] font-light rounded-lg text-sm py-2 w-44 text-center shadow-lg"
@@ -66,7 +91,11 @@ const Dashboard = () => {
           {activeTab === 'properties' ? <AddProperty /> : <UploadPhotos />}
         </div>
       </div>
-      {activeTab === 'properties' ? <Properties /> : <Photos selected={selectedPhotos} onSelect={handleSelect} />}
+      {activeTab === 'properties' ? (
+        <Properties properties={properties} />
+      ) : (
+        <Photos photos={photos} selected={selectedPhotos} onSelect={handleSelect} />
+      )}
     </div>
   );
 };
