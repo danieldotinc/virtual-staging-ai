@@ -3,6 +3,7 @@ import { Field, Form, Formik } from 'formik';
 import { useDropzone } from 'react-dropzone';
 
 import { Property, properties } from '@/app/data';
+import property from '@/app/firebase/firestore/property';
 
 const AddProperty = () => {
   const [showModal, setShowModal] = useState(false);
@@ -14,9 +15,16 @@ const AddProperty = () => {
 
   const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
-  const handleSubmit = (values: Omit<Property, 'cover'>) => {
+  const handleSubmit = async (values: Omit<Property, 'cover'>) => {
     console.log(values.images);
-    properties.push({ ...values, cover: { id: '', link: '' }, images: [] });
+    const newProperty = { ...values, cover: { id: '', link: '' }, images: [] };
+    properties.push(newProperty);
+
+    const { result, error } = await property.create(newProperty);
+
+    if (error) return console.log(error);
+    else console.log(result);
+
     setShowModal(false);
   };
 
@@ -92,19 +100,10 @@ const AddProperty = () => {
                                       </div>
                                       <p className="pointer-none text-gray-500 font-light text-sm mt-2">
                                         <span className="text-sm">Drag and drop</span> images here <br /> or{' '}
-                                        <label
-                                          htmlFor="file_input"
-                                          className="text-cyan-600 hover:underline cursor-pointer"
-                                        >
+                                        <label className="text-cyan-600 hover:underline cursor-pointer">
                                           select from your device
                                         </label>
-                                        <input
-                                          type="file"
-                                          id="file_input"
-                                          accept="image/*"
-                                          className="hidden"
-                                          {...getInputProps()}
-                                        />
+                                        <input type="file" accept="image/*" className="hidden" {...getInputProps()} />
                                       </p>
                                     </>
                                   )}

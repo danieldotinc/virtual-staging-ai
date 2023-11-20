@@ -1,14 +1,25 @@
 'use client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { properties } from '@/app/data';
 import PropertyCard from '../PropertyCard';
+import property, { Property } from '@/app/firebase/firestore/property';
 
 const Properties = () => {
+  const [properties, setProperties] = useState<Property[]>([]);
+
+  useEffect(() => {
+    const fetchProperties = async () => {
+      const list = await property.list();
+      setProperties(list);
+    };
+
+    fetchProperties();
+  }, []);
+
   return (
     <div className="flex justify-center flex-wrap">
       {properties.map((property, i) => (
-        <PropertyCard key={i} property={property} />
+        <PropertyCard key={i} property={property as unknown as Property} />
       ))}
     </div>
   );

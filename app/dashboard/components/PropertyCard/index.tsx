@@ -9,13 +9,15 @@ const PropertyCard: React.FC<Props> = ({ property }) => {
   return (
     <div className="m-5 antialiased text-gray-900">
       <div>
-        <img
-          src={property.cover.link}
-          alt=" random imgee"
-          className="w-[350px] object-cover object-center rounded-lg shadow-md"
-        />
+        {!!property.cover.link && (
+          <img
+            src={property.cover.link}
+            alt=" random imgee"
+            className="w-[350px] object-cover object-center rounded-lg shadow-md"
+          />
+        )}
 
-        <div className="relative px-4 -mt-16">
+        <div className={`px-4 ${property.cover.link ? 'relative -mt-16' : ''}`}>
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <div className="flex items-baseline">
               <span className="bg-teal-200 text-teal-800 text-xs px-2 inline-block rounded-full  uppercase font-semibold tracking-wide">
