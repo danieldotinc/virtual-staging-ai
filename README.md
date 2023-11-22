@@ -17,6 +17,7 @@ Furnish empty apartment pictures with AI.
 
 #### What other features may I add if I have some extra time?
 
+- add image carousel for each property item on dashboard for previewing all the images
 - allow archiving already assigned images or properties for cleaner dashboard
 - introduce progress bar for uploading
 - loading animation for different pages
