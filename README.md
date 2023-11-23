@@ -28,10 +28,8 @@ Furnish empty apartment pictures with AI.
 #### What would I do differently technically with extra time?
 
 - adjust more components to achieve more server side rendering
-- introduce a global state to avoid all the prop-drilling you see in the code
 - add form validation for adding a property and error handling/messages
 - introduce routes/apis for creating/updating properties and add request validation
-- refactor dashboard component for readability
 - introduce repository and services layers for all the external communications
 - add unit and end-to-end tests
 

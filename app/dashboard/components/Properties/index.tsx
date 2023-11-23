@@ -1,19 +1,19 @@
 import React from 'react';
 
 import PropertyCard from '../PropertyCard';
-import { Property } from '@/app/firebase/firestore/property';
+import useProperties from '@/app/store/properties';
 import { sortAlphabetically } from '@/app/utils';
 
-interface Props {
-  properties: Property[];
-}
+const Properties = () => {
+  const properties = useProperties(state => state.properties);
 
-const Properties = ({ properties }: Props) => (
-  <div className='flex justify-center flex-wrap'>
-    {sortAlphabetically(properties, 'title').map((property, i) => (
-      <PropertyCard key={i} property={property} />
-    ))}
-  </div>
-);
+  return (
+    <div className="flex justify-center flex-wrap">
+      {sortAlphabetically(properties, 'title').map((property, i) => (
+        <PropertyCard key={i} property={property} />
+      ))}
+    </div>
+  );
+};
 
 export default Properties;

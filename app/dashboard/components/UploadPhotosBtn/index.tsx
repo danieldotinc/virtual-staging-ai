@@ -1,22 +1,19 @@
 import React from 'react';
 
-import UploadPhotos from '@/app/components/UploadPhotos';
 import Modal from '@/app/components/Modal';
-import { Photo } from '@/app/firebase/firestore/photo';
+import UploadPhotos from '@/app/components/UploadPhotos';
 
-interface Props {
-  onPhotosUploaded: (ph: Photo[]) => void;
-}
+import { Photo } from '@/app/firebase/firestore/photoService';
+import usePhotos from '@/app/store/photos';
 
-const UploadPhotosBtn = ({ onPhotosUploaded }: Props) => {
+const UploadPhotosBtn = () => {
+  const [photos, setPhotos] = usePhotos(state => [state.photos, state.setPhotos]);
+
+  const handleUploadDone = (ps: Photo[]) => setPhotos([...ps, ...photos]);
+
   return (
-    <Modal
-      text='+ Upload photos'
-      title='Upload photos'
-      classes='w-[300px]'
-      closed={false}
-    >
-      <UploadPhotos onUploadDone={onPhotosUploaded} />
+    <Modal text="+ Upload photos" title="Upload photos" classes="w-[300px]" closed={false}>
+      <UploadPhotos onUploadDone={handleUploadDone} />
     </Modal>
   );
 };

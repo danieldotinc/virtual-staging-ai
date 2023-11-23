@@ -2,33 +2,21 @@
 import React from 'react';
 
 import PhotoItem from '../PhotoItem';
-import { Photo } from '@/app/firebase/firestore/photo';
+import usePhotos from '@/app/store/photos';
 
-interface Props {
-  photos: Photo[];
-  selected?: string[];
-  onSelect?: (selected: string[]) => void;
-}
+const Photos = () => {
+  const [photos, selected, setSelected] = usePhotos(state => [state.photos, state.selected, state.setSelected]);
 
-const Photos = ({ photos, selected, onSelect }: Props) => {
   const handleSelect = (ref: string) => {
-    if (!onSelect || !selected) return;
-    const isAlreadySelected = selected.some((s) => s === ref);
-    const updatedSelected = isAlreadySelected
-      ? [...selected].filter((s) => s !== ref)
-      : [...selected, ref];
-    onSelect(updatedSelected);
+    const isAlreadySelected = selected.some(s => s === ref);
+    const updatedSelected = isAlreadySelected ? [...selected].filter(s => s !== ref) : [...selected, ref];
+    setSelected(updatedSelected);
   };
 
   return (
-    <div className='flex justify-center flex-wrap'>
+    <div className="flex justify-center flex-wrap">
       {photos.map((image, i) => (
-        <PhotoItem
-          key={i}
-          image={image}
-          onSelect={handleSelect}
-          isSelected={!!selected?.some((s) => s === image.ref)}
-        />
+        <PhotoItem key={i} image={image} onSelect={handleSelect} isSelected={!!selected?.some(s => s === image.ref)} />
       ))}
     </div>
   );
