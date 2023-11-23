@@ -20,7 +20,7 @@ export default function RootLayout({
     <html lang='en'>
       <body className={inter.className}>
         <Navbar />
-        <main className='flex justify-center mx-0 sm:mx-5 md:mx-20'>
+        <main className='flex justify-center mx-0 sm:mx-5 md:mx-14'>
           {children}
         </main>
       </body>

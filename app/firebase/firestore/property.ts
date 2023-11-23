@@ -25,21 +25,6 @@ export type Property = {
   images: { ref: string; link: string }[];
 };
 
-const get = async (id: string) => {
-  let docRef = doc(DB, COLLECTION, id);
-
-  let result = null;
-  let error = null;
-
-  try {
-    result = await getDoc(docRef);
-  } catch (e) {
-    error = e;
-  }
-
-  return result?.data() as unknown as Property;
-};
-
 const list = async () => {
   const result: Property[] = [];
   let error = null;
@@ -90,4 +75,4 @@ const update = async (id: string, property: Omit<Property, 'id'>) => {
   return { result, error };
 };
 
-export default { create, update, get, list };
+export default { create, update, list };

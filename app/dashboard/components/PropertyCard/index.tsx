@@ -1,23 +1,15 @@
 import React from 'react';
-import Link from 'next/link';
 import { Property } from '@/app/firebase/firestore/property';
+import PhotoCarousel from './PhotoCarousel';
 
 interface Props {
   property: Property;
 }
 
 const PropertyCard = ({ property }: Props) => (
-  <Link
-    href={`/dashboard/properties/${property.id}`}
-    className='m-6 antialiased text-gray-900 cursor-pointer'
-  >
-    <div>
-      <img
-        src={property.cover.link || '/buildings/default.jpg'}
-        alt=' random imgee'
-        className='w-[350px] object-cover object-center rounded-lg shadow-md'
-      />
-
+  <div className='flex m-6 antialiased text-gray-900 cursor-pointer'>
+    <div className=''>
+      <PhotoCarousel images={property.images} />
       <div className='px-4 relative -mt-16'>
         <div className='bg-white p-6 rounded-lg shadow-lg'>
           <div className='flex items-baseline'>
@@ -47,7 +39,7 @@ const PropertyCard = ({ property }: Props) => (
         </div>
       </div>
     </div>
-  </Link>
+  </div>
 );
 
 export default PropertyCard;
