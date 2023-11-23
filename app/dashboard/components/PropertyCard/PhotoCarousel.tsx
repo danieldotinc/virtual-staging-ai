@@ -31,7 +31,9 @@ const PhotoCarousel = ({ images }: Props) => {
   return images.length <= 1 ? (
     <img
       src={images[0]?.link || '/buildings/default.jpg'}
-      className='rounded-xl shadow-md w-[400px] max-h-[260px] md:w-[500px] md:max-h-[400px] overflow-hidden'
+      className={`rounded-xl shadow-md w-[400px] max-h-[260px] md:w-[${
+        images.length === 1 ? '600' : '400'
+      }px] md:max-h-[400px] overflow-hidden`}
     />
   ) : (
     <Carousel
