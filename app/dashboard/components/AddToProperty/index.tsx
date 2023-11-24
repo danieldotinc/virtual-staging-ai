@@ -45,7 +45,7 @@ const AddToProperty = () => {
           backgroundColor: '#eab308',
           fontWeight: '300',
           height: '36px',
-          width: '200px',
+          width: '220px',
         }}
         className="overflow-scroll max-h-60 z-50 text-black"
       >

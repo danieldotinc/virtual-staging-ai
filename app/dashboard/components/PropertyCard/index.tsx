@@ -8,7 +8,7 @@ interface Props {
 }
 
 const PropertyCard = ({ property }: Props) => (
-  <div className="flex m-6 antialiased text-gray-900">
+  <div className="flex m-3 mx-0 md:m-6 antialiased text-gray-900">
     <div className="">
       <PhotoCarousel images={property.images} />
       <div className="px-4 relative -mt-16">
